@@ -5,49 +5,143 @@ import interfaces.LinkedList;
 import java.util.Iterator;
 
 public class SinglyLinkedList<E> implements LinkedList<E> {
+    private Node<E> head;
+    private int size;
 
-    @Override
-    public void addFirst(E element) {
+    private static class Node<E> {
+        private E value;
+        private Node<E> next;
 
+        Node(E element) {
+            this.value = element;
+            this.next = null;
+        }
+    }
+
+    public SinglyLinkedList() {
+        this.head = null;
+        this.size = 0;
     }
 
     @Override
+    public void addFirst(E element) {
+        Node<E> newNode = new Node<>(element);
+
+        newNode.next = this.head;
+        this.head = newNode;
+
+        this.size++;
+    }
+
+
+    @Override
     public void addLast(E element) {
+        Node<E> newNode = new Node<>(element);
+
+        if (this.isEmpty()) {
+            addFirst(newNode.value);
+        } else {
+            Node<E> current = this.head;
+            while (current.next != null) {
+                current = current.next;
+            }
+
+            current.next = newNode;
+            this.size++;
+
+        }
 
     }
 
     @Override
     public E removeFirst() {
-        return null;
+        ensureNonEmpty();
+        Node<E> current = this.head;
+
+        this.head = current.next;
+
+        this.size--;
+
+        return current.value;
     }
 
     @Override
     public E removeLast() {
-        return null;
+        ensureNonEmpty();
+
+        if (this.size == 1) {
+            E value = this.head.value;
+            this.head = null;
+
+            return value;
+        }
+
+        Node<E> preLast = this.head;
+        Node<E> toRemove = this.head.next;
+
+        while (toRemove.next != null) {
+            preLast = toRemove;
+            toRemove = toRemove.next;
+        }
+
+        preLast.next = null;
+
+        this.size--;
+
+        return toRemove.value;
     }
+
 
     @Override
     public E getFirst() {
-        return null;
+        ensureNonEmpty();
+        return this.head.value;
+    }
+
+    private void ensureNonEmpty() {
+        if (this.isEmpty()) {
+            throw new IllegalStateException();
+        }
     }
 
     @Override
     public E getLast() {
-        return null;
+        ensureNonEmpty();
+        Node<E> current = this.head;
+
+        while (current.next != null) {
+            current = current.next;
+        }
+
+        return current.value;
     }
 
     @Override
     public int size() {
-        return 0;
+        return this.size;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return this.size == 0;
     }
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return new Iterator<E>() {
+            private Node<E> current = head;
+
+            @Override
+            public boolean hasNext() {
+                return current.next != null;
+            }
+
+            @Override
+            public E next() {
+                E element = current.value;
+                current = current.next;
+                return element;
+            }
+        };
     }
 }

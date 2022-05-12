@@ -6,33 +6,82 @@ import java.util.Iterator;
 
 public class Stack<E> implements AbstractStack<E> {
 
+    private Node<E> top;
+    private int size;
+
+    private static class Node<E> {
+        private E value;
+        private Node<E> next;
+
+        Node(E element) {
+            this.value = element;
+        }
+    }
+
+    public Stack() {
+        this.top = null;
+        this.size = 0;
+    }
+
+
+
     @Override
     public void push(E element) {
+        Node<E> newNode = new Node<>(element);
+        newNode.next = this.top;
+        this.top = newNode;
 
+        this.size++;
     }
+
 
     @Override
     public E pop() {
-        return null;
+        checkIfEmpty();
+        Node<E> removedElement = this.top;
+        this.top = removedElement.next;
+        this.size--;
+
+        return removedElement.value;
+    }
+
+    private void checkIfEmpty() {
+        if (this.isEmpty()){
+            throw new IllegalStateException("Stack is empty!");
+        }
     }
 
     @Override
     public E peek() {
-        return null;
+        checkIfEmpty();
+        return this.top.value;
     }
 
     @Override
     public int size() {
-        return 0;
+        return this.size;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return this.size == 0;
     }
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return new Iterator<E>() {
+            private Node<E> current = top;
+            @Override
+            public boolean hasNext() {
+                return current != null;
+            }
+
+            @Override
+            public E next() {
+                E element = current.value;
+                this.current = this.current.next;
+                return element;
+            }
+        };
     }
 }

@@ -55,7 +55,7 @@ public class BenchmarkTests {
 
     private void fillSinglyLinkedListWithRandomValues(SinglyLinkedList<Integer> singlyLinkedList) {
         // In the SinglyLinkedList we can use a pointer to the end of the structure
-        // then it wont matter if we call addLast() or addFirst()
+        // then it won't matter if we call addLast() or addFirst()
         // but that we will implement later so for now we will call addFirst()
         new Random()
                 .ints()

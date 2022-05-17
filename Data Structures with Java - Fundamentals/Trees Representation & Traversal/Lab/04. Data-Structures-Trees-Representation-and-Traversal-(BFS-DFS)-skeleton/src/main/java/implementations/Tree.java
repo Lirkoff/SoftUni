@@ -1,140 +1,159 @@
 package implementations;
 
+
 import interfaces.AbstractTree;
 
 import java.util.*;
 
 public class Tree<E> implements AbstractTree<E> {
-    private E key;
+    private E value;
     private Tree<E> parent;
     private List<Tree<E>> children;
 
-    public Tree(E key, Tree<E>... children) {
-        this.key = key;
+
+    public Tree(E value, Tree<E>... subtrees) {
+        this.value = value;
+        this.parent = null;
         this.children = new ArrayList<>();
 
-        for (Tree<E> child : children) {
-            this.children.add(child);
-            child.parent = this;
+        for (Tree<E> subtree : subtrees) {
+            this.children.add(subtree);
+            subtree.parent = this;
         }
-
     }
 
     @Override
     public List<E> orderBfs() {
         List<E> result = new ArrayList<>();
-        Deque<Tree<E>> queue = new ArrayDeque<>();
-        queue.offer(this);
+        if (this.value == null) {
+            return result;
+        }
 
-        while (queue.size() > 0) {
-            Tree<E> current = queue.poll();
-            result.add(current.key);
+        Deque<Tree<E>> childrenQueue = new ArrayDeque<>();
+
+        childrenQueue.offer(this);
+        while (!childrenQueue.isEmpty()) {
+            Tree<E> current  = childrenQueue.poll();
+
+            result.add(current.value);
 
             for (Tree<E> child : current.children) {
-                queue.offer(child);
+                childrenQueue.offer(child);
             }
-
         }
+
         return result;
     }
 
     @Override
     public List<E> orderDfs() {
-        List<E> order = new ArrayList<>();
-        this.dfs(this, order);
-        return order;
+        List<E> result = new ArrayList<>();
+
+        this.doDfs(this, result);
+
+
+        return result;
     }
 
-    private void dfs(Tree<E> tree, List<E> order) {
-        for (Tree<E> child : tree.children) {
-            this.dfs(child,order);
+    private void doDfs(Tree<E> node, List<E> result) {
+        for (Tree<E> child : node.children) {
+            this.doDfs(child,result);
         }
-        order.add(tree.key);
+        result.add(node.value);
     }
 
     @Override
     public void addChild(E parentKey, Tree<E> child) {
-        Deque<Tree<E>> queue = new ArrayDeque<>();
-        queue.offer(this);
+        Tree<E> search = find(parentKey);
 
-        while (queue.size() > 0) {
-            Tree<E> current = queue.poll();
-
-            if (current.key == parentKey) {
-                current.children.add(child);
-                break;
-            }
-
-            for (Tree<E> ch : current.children) {
-                queue.offer(ch);
-            }
-
+        if (search == null) {
+            throw new IllegalArgumentException();
         }
+
+        search.children.add(child);
+        child.parent = search;
     }
-	
-	@Override
-    public void removeNode(E nodeKey) {
-        Deque<Tree<E>> queue = new ArrayDeque<>();
-        queue.offer(this);
 
-        while (queue.size() > 0) {
-            Tree<E> current = queue.poll();
+    private Tree<E> find(E parentKey) {
+        Deque<Tree<E>> childrenQueue = new ArrayDeque<>();
 
-            if (current.key == nodeKey) {
-                current.children.clear();
-                current.parent.children.remove(current);
-                break;
+        childrenQueue.offer(this);
+
+        while (!childrenQueue.isEmpty()) {
+            Tree<E> current  = childrenQueue.poll();
+
+            if (current.value == parentKey) {
+                return current;
             }
 
-            for (Tree<E> ch : current.children) {
-                queue.offer(ch);
+            for (Tree<E> child : current.children) {
+                childrenQueue.offer(child);
             }
-
         }
+
+        return null;
+    }
+
+    @Override
+    public void removeNode(E nodeKey) {
+        Tree<E> toRemove = find(nodeKey);
+
+        if (toRemove == null) {
+            throw new IllegalArgumentException();
+        }
+
+        for (Tree<E> child : toRemove.children) {
+            child.parent = null;
+        }
+
+        toRemove.children.clear();
+
+        Tree<E> parent = toRemove.parent;
+
+        if (parent != null) {
+            parent.children.remove(toRemove);
+        }
+
+        toRemove.value = null;
     }
 
     @Override
     public void swap(E firstKey, E secondKey) {
-        Deque<Tree<E>> queue = new ArrayDeque<>();
-        queue.offer(this);
-        List<Tree<E>> elementsToSwap = new ArrayList<>();
+        Tree<E> firstNode = find(firstKey);
+        Tree<E> secondNode = find(secondKey);
 
-        while (queue.size() > 0) {
-            Tree<E> current = queue.poll();
-
-            if (current.key == firstKey) {
-                elementsToSwap.add(current);
-            } else if (current.key == secondKey) {
-                elementsToSwap.add(current);
-            }
-
-            if (elementsToSwap.size() == 2) {
-                break;
-            }
-
-            for (Tree<E> ch : current.children) {
-                queue.offer(ch);
-            }
-
+        if (firstNode == null || secondNode == null) {
+            throw new IllegalArgumentException();
         }
 
-        if (!elementsToSwap.isEmpty()) {
-            Tree<E> first = elementsToSwap.get(0);
-            Tree<E> second = elementsToSwap.get(1);
-            Tree<E> secondParent = second.parent;
-            Tree<E> firstParent = first.parent;
-            List<Tree<E>> firstChildren = first.children;
-            List<Tree<E>> secondChildren = second.children;
+        Tree<E> firstParent = firstNode.parent;
+        Tree<E> secondParent = secondNode.parent;
 
-            first.key = secondKey;
-            second.key = firstKey;
-
-            first.parent = secondParent;
-            second.parent = firstParent;
-
-            first.children = secondChildren;
-            second.children = firstChildren;
+        if (firstParent == null) {
+            swapRoot(secondNode);
+            return;
+        } else if (secondParent == null) {
+            swapRoot(firstNode);
+            return;
         }
+
+        Tree<E> tmp = firstNode;
+        firstNode = secondNode;
+        secondNode = tmp;
+
+
+        int firstIndex = firstParent.children.indexOf(firstNode);
+        int secondIndex = secondParent.children.indexOf(secondNode);
+
+        firstParent.children.set(firstIndex,secondNode);
+        secondParent.children.set(secondIndex,firstNode);
+    }
+
+    private void swapRoot(Tree<E> node) {
+        this.value = node.value;
+        this.children = node.children;
+        this.parent = null;
+        node.parent = null;
     }
 }
 

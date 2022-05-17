@@ -1,2 +1,2 @@
 # SoftUni
-Homework, projects, exams
+All Java homework, projects, exams
